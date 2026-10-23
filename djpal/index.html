@@ -153,6 +153,7 @@
       <div class="or">or join one</div>
       <div class="row"><input id="joinCode" class="field" maxlength="4" placeholder="Code" style="text-transform:uppercase;letter-spacing:.2em;text-align:center"><button id="joinBtn" class="btn">Join</button></div>
       <p id="landErr" class="muted" style="font-size:14px;min-height:20px"></p>
+      <a id="getApp" class="btn ghost hide" href="DJPalBridge.apk" download>DJ from Android? Get the app that loads songs into djay</a>
     </div>
   </div>
 </section>
@@ -198,6 +199,7 @@
     <button class="btn sm amber" id="tvBtn">Party screen</button>
   </div>
   <div id="hBanner"></div>
+  <div id="hBridge"></div>
   <div class="hgrid">
     <div class="stack">
       <div class="card" id="hNow"></div>
@@ -229,7 +231,7 @@
         <div id="hPlayed" class="list"></div>
       </div>
       <div class="card tip">
-        <b>With djay:</b> tap <b>Copy</b> on a song, then paste into djay's search with Apple Music as the source. Keep this page open in Split View or on a second device; if the browser goes to the background, guests lose the connection until you come back.
+        <span id="djayTip"><b>With djay:</b> tap <b>Copy</b> on a song, then paste into djay's search with Apple Music as the source. Keep this page open in Split View or on a second device; if the browser goes to the background, guests lose the connection until you come back.</span>
         <div class="row" style="margin-top:12px"><button class="btn sm ghost" id="endBtn" style="color:var(--red)">End party</button></div>
       </div>
     </div>

@@ -34,4 +34,5 @@ Labels: **Smooth mix** (key and tempo fit), **Key fits, tempo jump**, **Tempo fi
 - If the host refreshes, the queue is kept and it reclaims the same code so the QR still works.
 - Apple's free search allows roughly 20 lookups a minute per network. With a big crowd on one Wi-Fi, guests may see "Search is busy" for a few seconds.
 - Peer-to-peer like the card games, using the free PeerJS lobby. No server, no accounts, nothing to pay.
-- DJPal cannot push songs into djay, Apple Music or YouTube Music by itself. None of them offer a public way for another app to do that, so you load the track; DJPal tells you what and why.
+- On iPhone, iPad and Mac, DJPal can't push songs into djay by itself. None of the apps offer a public way to do that there, so you load the track.
+- **On Android it can.** The DJPal Android app (download from DJPal's start screen on an Android phone, or `DJPalBridge.apk`) adds Deck 1 / Deck 2 buttons that open djay, search the song and load it for you. Setup and details are in `djpal-android/README.md`.

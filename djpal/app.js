@@ -40,6 +40,38 @@
     const artist = (t.artist || '').split(/,|&| feat\.? | x /i)[0].trim();
     return (title + ' ' + artist).trim();
   }
+  const cleanTitle = t => t.replace(/\s*[([][^)\]]*[)\]]/g, '').trim() || t;
+
+  // ---------- Android app bridge (only present inside the DJPal Android app) ----------
+  const BR = window.DJPalBridge || null;
+  const loadedOn = {}; // song id -> deck it was sent to
+  const pendingLoad = {};
+  function bridgeStatus() { try { return JSON.parse(BR.status()); } catch (e) { return {}; } }
+  function renderBridge() {
+    if (!BR || app.role !== 'host') return;
+    const s = bridgeStatus();
+    let msg = '';
+    if (!s.ready) msg = 'DJPal Bridge is switched off, so Deck buttons can\'t reach djay yet.';
+    else if (!s.djay) msg = 'djay isn\'t installed on this phone.';
+    else if (!s.deck1 || !s.deck2) msg = 'Teach DJPal where djay\'s deck buttons are (20 seconds, one time).';
+    $('#hBridge').innerHTML = msg ? '<div class="banner">' + msg + ' <button class="btn sm amber" data-bridge="setup">Bridge setup</button></div>' : '';
+  }
+  window.onDJPalBridgeStatus = renderBridge;
+  window.onDJPalBridge = (key, ok, msg) => {
+    const [id, deck] = String(key).split(':');
+    delete pendingLoad[key];
+    if (ok) loadedOn[id] = Number(deck);
+    toast(msg);
+    renderHost();
+  };
+  function deckButtons(q, big) {
+    const sz = big ? '' : ' sm';
+    return [1, 2].map(n => {
+      const key = q.id + ':' + n, busy = pendingLoad[key];
+      return '<button class="btn' + sz + (big && n === 1 ? ' hot' : '') + '" data-load="' + esc(q.id) + '" data-deck="' + n + '"' + (busy ? ' disabled' : '') + '>' + (busy ? 'Loading...' : 'Deck ' + n) + '</button>';
+    }).join('');
+  }
+
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); return true; } catch (e) {
       const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
@@ -203,9 +235,13 @@
     if (c) s += '<span class="tag ' + (c.score >= 4 ? 'ok' : c.score >= 2 ? 'meh' : 'bad') + '">' + esc(c.label) + '</span>';
     return s;
   }
+  function deckTag(q) {
+    return loadedOn[q.id] ? '<span class="tag ok">On Deck ' + loadedOn[q.id] + '</span>' : '';
+  }
   function handoff(q, big) {
     const sz = big ? '' : ' sm';
     const yt = 'https://music.youtube.com/search?q=' + encodeURIComponent(searchText(q));
+    if (BR) return deckButtons(q, big) + '<button class="btn' + sz + ' ghost" data-copy="' + esc(q.id) + '">Copy</button>';
     return '<button class="btn' + sz + '" data-copy="' + esc(q.id) + '">Copy for djay</button>' +
       (q.url ? '<a class="btn' + sz + '" href="' + esc(q.url) + '" target="_blank" rel="noopener">Apple Music</a>' : '') +
       '<a class="btn' + sz + '" href="' + esc(yt) + '" target="_blank" rel="noopener">YT Music</a>';
@@ -233,7 +269,7 @@
     // Up next
     const nx = DJQ.pickNext(p);
     $('#hNext').innerHTML = nx
-      ? '<div class="label">Up next</div><div class="now"><img class="art lg" src="' + esc(nx.art) + '" alt=""><div class="grow"><div class="t" style="font-size:17px">' + esc(nx.title) + '</div><div class="a">' + esc(nx.artist) + ' · ' + nx.votes.length + (nx.votes.length === 1 ? ' vote' : ' votes') + ' · ' + esc(nx.byName) + '</div><div class="tags">' + aTags(nx.a, from) + '</div><div class="why">' + esc(nx.why) + '</div></div></div>' +
+      ? '<div class="label">Up next</div><div class="now"><img class="art lg" src="' + esc(nx.art) + '" alt=""><div class="grow"><div class="t" style="font-size:17px">' + esc(nx.title) + '</div><div class="a">' + esc(nx.artist) + ' · ' + nx.votes.length + (nx.votes.length === 1 ? ' vote' : ' votes') + ' · ' + esc(nx.byName) + '</div><div class="tags">' + deckTag(nx) + aTags(nx.a, from) + '</div><div class="why">' + esc(nx.why) + '</div></div></div>' +
         '<div class="acts">' + handoff(nx, true) + '<button class="btn ghost" data-veto="' + esc(nx.id) + '">Skip it</button></div>'
       : '<div class="label">Up next</div><div class="empty">No requests yet. Put the party screen up and they will roll in.</div>';
 
@@ -243,8 +279,8 @@
     $('#hQueue').innerHTML = r.length ? r.map((q, i) =>
       '<div class="item hitem"><div class="rank">' + (i + 2) + '</div><img class="art" src="' + esc(q.art) + '" alt=""><div class="grow">' +
       '<div class="t">' + esc(q.title) + (q.explicit ? ' <span class="tag e">E</span>' : '') + '</div><div class="a">' + esc(q.artist) + ' · ' + q.votes.length + (q.votes.length === 1 ? ' vote' : ' votes') + ' · ' + esc(q.byName) + '</div>' +
-      '<div class="tags">' + aTags(q.a, from) + '</div>' +
-      '<div class="acts"><button class="btn sm" data-play="' + esc(q.id) + '">Play now</button><button class="btn sm" data-copy="' + esc(q.id) + '">Copy for djay</button><button class="btn sm" data-boost="' + esc(q.id) + '">Bump up</button><button class="btn sm ghost" data-veto="' + esc(q.id) + '" style="color:var(--red)">Remove</button></div>' +
+      '<div class="tags">' + deckTag(q) + aTags(q.a, from) + '</div>' +
+      '<div class="acts"><button class="btn sm" data-play="' + esc(q.id) + '">Play now</button>' + (BR ? deckButtons(q, false) : '<button class="btn sm" data-copy="' + esc(q.id) + '">Copy for djay</button>') + '<button class="btn sm" data-boost="' + esc(q.id) + '">Bump up</button><button class="btn sm ghost" data-veto="' + esc(q.id) + '" style="color:var(--red)">Remove</button></div>' +
       '</div></div>').join('') : '<div class="empty">' + (nx ? 'Just the one so far.' : 'Empty.') + '</div>';
 
     // Settings
@@ -256,6 +292,7 @@
     $('#hPlayed').innerHTML = p.played.length ? p.played.slice(0, 15).map(q => '<div class="item"><img class="art" src="' + esc(q.art) + '" alt=""><div class="grow"><div class="t">' + esc(q.title) + '</div><div class="a">' + esc(q.artist) + '</div></div></div>').join('') : '<div class="empty">Nothing yet.</div>';
 
     renderTv(nx, r);
+    renderBridge();
   }
 
   function renderTv(nx, rest) {
@@ -273,6 +310,17 @@
     if (d.play) { DJQ.play(p, d.play); changed(); window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
     if (d.veto) { DJQ.veto(p, d.veto); changed(); return; }
     if (d.boost) { DJQ.boost(p, d.boost, 10); changed(); toast('Bumped up a vote\'s worth'); return; }
+    if (d.bridge === 'setup') { if (BR) BR.setup(); return; }
+    if (d.load && BR) {
+      const q = (p.now && p.now.id === d.load) ? p.now : p.queue.find(x => x.id === d.load);
+      if (!q) return;
+      const key = q.id + ':' + d.deck;
+      pendingLoad[key] = true;
+      renderHost();
+      setTimeout(() => { if (pendingLoad[key]) { delete pendingLoad[key]; renderHost(); } }, 20000);
+      BR.load(JSON.stringify({ id: key, query: searchText(q), title: cleanTitle(q.title), deck: Number(d.deck) }));
+      return;
+    }
     if (d.copy) {
       const q = (p.now && p.now.id === d.copy) ? p.now : p.queue.find(x => x.id === d.copy);
       if (q) copy(searchText(q)).then(ok => toast(ok ? 'Copied "' + searchText(q) + '". Paste it in djay search.' : 'Could not copy. Type: ' + searchText(q)));
@@ -443,6 +491,10 @@
     $('#helloBtn').onclick = hello;
     $('#guestName').addEventListener('keydown', e => { if (e.key === 'Enter') hello(); });
 
+ if (BR) {
+      $('#tvBtn').insertAdjacentHTML('beforebegin', '<button class="btn sm" data-bridge="setup">Bridge</button>');
+      $('#djayTip').innerHTML = '<b>With djay:</b> tap <b>Deck 1</b> or <b>Deck 2</b> on any song and DJPal loads it in djay for you. Guests stay connected while you are in djay. If a load misses, open Bridge and teach the buttons again.';
+    }
     $('#tvBtn').onclick = () => { $('#tv').classList.remove('hide'); renderHost(); };
     $('#tvClose').onclick = () => $('#tv').classList.add('hide');
     $('#copyLink').onclick = () => copy(inviteUrl()).then(ok => toast(ok ? 'Invite link copied' : inviteUrl()));
@@ -457,6 +509,7 @@
     const room = (qs.get('room') || '').toUpperCase().replace(/[^A-Z]/g, '');
     if (room.length === 4) { startGuest(room); return; }
     if (qs.get('host') && store.get('djpal.party', null)) { startHost('', true); return; }
+    if (!BR && /Android/i.test(navigator.userAgent)) $('#getApp').classList.remove('hide');
     const old = store.get('djpal.party', null);
     if (old) $('#startBtn').textContent = 'Start a party (or resume ' + old.name + ')';
     show('#landing');
