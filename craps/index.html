@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Craps</title>
+<meta name="description" content="Live multiplayer craps with friends. Pass, Don't Pass, Come, odds, place bets, field, hardways and props.">
+<meta name="theme-color" content="#06281a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --felt:#0f5c3b; --felt-deep:#06281a; --line:#efe6c8; --line-dim:rgba(239,230,200,.32);
+  --gold:#f3cf4e; --gold-deep:#c9a22a; --red:#e0473d; --cream:#f7f2e4;
+  --muted:#a9c9b6; --win:#7be3a1; --lose:#ff7f73; --panel:rgba(2,20,12,.55); --edge:#2b7a55;
+}
+*{box-sizing:border-box}
+html{background:var(--felt-deep)}
+html,body{margin:0}
+body{min-height:100vh;font-family:Inter,system-ui,sans-serif;color:var(--cream);
+  background:radial-gradient(ellipse at 50% 10%,#17784d 0%,var(--felt) 35%,var(--felt-deep) 100%) no-repeat fixed;
+  -webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:disabled{opacity:.4;cursor:not-allowed}
+input{font:inherit}
+a{color:inherit}
+.display{font-family:'Bebas Neue',Impact,sans-serif;letter-spacing:.04em;font-weight:400}
+.hidden{display:none!important}
+
+/* ---------- welcome ---------- */
+#welcome{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.wbox{width:100%;max-width:440px;text-align:center}
+.wbox .dz{font-size:44px;margin-bottom:6px}
+.wbox h1{font-size:clamp(56px,14vw,84px);line-height:.9;margin:0 0 4px}
+.wbox h1 span{color:var(--gold)}
+.tag{color:var(--muted);margin:0 0 26px;font-size:14px}
+.wcard{background:var(--panel);border:1px solid var(--edge);border-radius:18px;padding:20px;text-align:left;margin-bottom:14px}
+.wcard h2{margin:0 0 12px;font-size:26px;color:var(--gold)}
+label.fl{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 6px}
+.inp{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--edge);background:#04200f;color:var(--cream);font-size:16px;outline:none}
+.inp:focus{border-color:var(--gold)}
+.row{display:flex;gap:10px;align-items:center}
+.btn{padding:12px 18px;border-radius:999px;font-weight:700;font-size:15px;background:#1c6b47;border:1px solid #3a9a6e;transition:transform .08s,background .15s;white-space:nowrap}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.gold{background:linear-gradient(#ffdb63,var(--gold-deep));color:#1a1300;border-color:#ffe48a}
+.btn.red{background:linear-gradient(#ee5a4f,#b8322b);border-color:#ff8a80}
+.btn.ghost{background:transparent}
+.btn.sm{padding:7px 12px;font-size:13px}
+.btn.wide{width:100%}
+.seg{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.seg button{padding:8px 12px;border-radius:999px;border:1px solid var(--edge);font-size:13px;font-weight:600}
+.seg button.on{background:var(--gold);color:#1a1300;border-color:var(--gold)}
+.err{color:var(--lose);font-size:14px;min-height:20px;margin-top:8px}
+.invite{background:rgba(243,207,78,.12);border:1px solid var(--gold-deep);color:var(--gold);padding:10px 14px;border-radius:12px;margin-bottom:14px;font-weight:600}
+.back{font-size:13px;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--cream)}
+
+/* ---------- top ---------- */
+#game{max-width:1280px;margin:0 auto;padding:10px 12px 120px}
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.top .brand{font-size:32px;line-height:1;margin-right:auto}
+.top .brand span{color:var(--gold)}
+.code{background:var(--panel);border:1px solid var(--edge);border-radius:999px;padding:5px 5px 5px 14px;display:flex;align-items:center;gap:10px;font-size:13px}
+.code b{font-family:'Bebas Neue';font-size:22px;letter-spacing:.12em;color:var(--gold);line-height:1}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--win);display:inline-block;flex:none}
+.dot.off{background:var(--lose)}
+.banner{background:rgba(224,71,61,.16);border:1px solid var(--red);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:14px}
+
+.main{display:grid;grid-template-columns:1fr 310px;gap:14px;align-items:start}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+
+/* ---------- felt ---------- */
+.felt{border-radius:26px;padding:14px;background:radial-gradient(ellipse at 50% 0%,rgba(255,255,255,.08),transparent 60%),rgba(0,0,0,.1);
+  border:3px solid #5b3a1e;box-shadow:inset 0 0 0 6px #3b2412,inset 0 0 70px rgba(0,0,0,.35),0 14px 40px rgba(0,0,0,.4)}
+.stage{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:6px 6px 14px}
+.dice{display:flex;gap:10px}
+.die{width:54px;height:54px;border-radius:11px;background:linear-gradient(145deg,#fff,#e9e4d6);box-shadow:0 4px 10px rgba(0,0,0,.45),inset 0 -3px 0 rgba(0,0,0,.12);
+  display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);padding:8px;gap:2px}
+.die i{display:block;width:10px;height:10px;border-radius:50%;margin:auto;background:transparent}
+.die i.on{background:#b3201a;box-shadow:inset 0 1px 2px rgba(0,0,0,.4)}
+.dice.rolling .die{animation:shake .32s infinite}
+.dice.rolling .die:nth-child(2){animation-delay:.08s}
+@keyframes shake{0%{transform:translate(0,0) rotate(0)}25%{transform:translate(-4px,-6px) rotate(-14deg)}50%{transform:translate(3px,2px) rotate(9deg)}75%{transform:translate(-2px,4px) rotate(-6deg)}100%{transform:translate(0,0) rotate(0)}}
+.dice.land .die{animation:land .45s ease-out}
+@keyframes land{0%{transform:scale(1.25) rotate(18deg)}60%{transform:scale(.95) rotate(-4deg)}100%{transform:scale(1) rotate(0)}}
+.callwrap{min-width:0;text-align:center}
+.call{font-size:clamp(30px,5vw,46px);line-height:1;color:var(--cream);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.call.good{color:var(--gold)} .call.bad{color:var(--lose)}
+.call.pop{animation:pop .5s ease-out}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+.sub{color:var(--muted);font-size:13px;margin-top:4px;min-height:17px}
+.pointbox{display:flex;flex-direction:column;align-items:center;gap:4px}
+.lbl{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.puck{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;letter-spacing:.06em;
+  background:#151515;color:#eee;border:3px solid #eee;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+.puck.on{background:#fff;color:#111;border-color:#111;font-size:20px}
+
+.layout{display:grid;grid-template-columns:1fr 230px;gap:10px}
+@media (max-width:760px){.layout{grid-template-columns:1fr}}
+.mainbets{display:flex;flex-direction:column;gap:8px}
+.spot{position:relative;border:2px solid var(--line-dim);border-radius:12px;padding:8px 10px;cursor:pointer;user-select:none;-webkit-user-select:none;
+  transition:border-color .15s,background .15s,opacity .15s;min-height:56px;display:flex;flex-direction:column;justify-content:center}
+.spot:hover{border-color:var(--line);background:rgba(255,255,255,.04)}
+.spot.closed{opacity:.45}
+.spot .nm{font-family:'Bebas Neue';letter-spacing:.06em;font-size:22px;line-height:1;color:var(--line)}
+.spot .hint{font-size:11px;color:var(--muted);margin-top:2px}
+.spot .mine{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;gap:4px;align-items:center}
+.spot .oth{font-size:10px;color:var(--gold);opacity:.8;margin-top:2px;padding-right:44px}
+.spot .oth:empty{display:none}
+.spot.win{animation:flashw 1.4s ease-out}
+.spot.lose{animation:flashl 1.4s ease-out}
+@keyframes flashw{0%{background:rgba(123,227,161,.45);border-color:var(--win)}100%{background:transparent}}
+@keyframes flashl{0%{background:rgba(255,127,115,.35);border-color:var(--lose)}100%{background:transparent}}
+.float{position:absolute;left:50%;top:6px;transform:translateX(-50%);font-weight:800;font-size:15px;pointer-events:none;animation:floatup 1.6s ease-out forwards;text-shadow:0 1px 3px #000;z-index:3;white-space:nowrap}
+.float.w{color:var(--win)} .float.l{color:var(--lose)}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,8px)}15%{opacity:1}100%{opacity:0;transform:translate(-50%,-26px)}}
+
+.nums{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+@media (max-width:560px){.nums{grid-template-columns:repeat(3,1fr)}}
+.spot.num{min-height:118px;justify-content:flex-start;align-items:center;padding:8px 6px 18px;text-align:center}
+.spot.num .nl{font-family:'Bebas Neue';font-size:34px;line-height:1;color:var(--line);letter-spacing:.04em}
+.spot.num .pay{font-size:10px;color:var(--muted)}
+.spot.num .mine{position:static;transform:none;margin-top:6px;justify-content:center;min-height:26px}
+.spot.num .pk{position:absolute;top:-10px;right:-8px;width:32px;height:32px;font-size:11px;border-width:2px}
+.spot.num .oth{padding:0;text-align:center;margin-top:auto}
+.cp{display:flex;flex-direction:column;gap:3px;margin-top:4px;width:100%}
+.cprow{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;background:rgba(0,0,0,.22);border-radius:7px;padding:3px 2px}
+.cprow.dk{background:rgba(0,0,0,.45)}
+.oddsbtn{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;border:1px dashed var(--gold);color:var(--gold);line-height:1.2}
+.oddsbtn:hover{background:rgba(243,207,78,.15)}
+.oddsbtn.has{border-style:solid;background:rgba(243,207,78,.2)}
+
+.row2{display:grid;grid-template-columns:3fr 1fr;gap:8px}
+.spot.come{min-height:70px}
+.spot.come .nm{font-size:32px}
+.spot.field .nm{font-size:26px}
+.spot.field .fnums{font-family:'Bebas Neue';font-size:20px;letter-spacing:.14em;color:var(--line)}
+.spot.field .fnums b{color:var(--gold);font-weight:400}
+.spot.pass{border-color:var(--line);min-height:74px}
+.spot.pass .nm{font-size:36px}
+.spot .ob{margin-top:5px;align-self:flex-start}
+
+.props{border:2px solid var(--line-dim);border-radius:14px;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start}
+.props h3{grid-column:1/-1;margin:0;font-family:'Bebas Neue';font-weight:400;letter-spacing:.12em;font-size:16px;color:var(--gold);text-align:center}
+@media (max-width:760px){.props{grid-template-columns:repeat(4,1fr)}}
+@media (max-width:420px){.props{grid-template-columns:repeat(2,1fr)}}
+.spot.prop{min-height:64px;padding:6px;align-items:center;text-align:center;border-radius:10px}
+.spot.prop .nm{font-size:17px}
+.spot.prop .pay{font-size:10px;color:var(--gold)}
+.spot.prop .mine{position:static;transform:none;margin-top:3px;justify-content:center;min-height:0}
+.spot.prop .oth{display:none}
+.mdice{display:flex;gap:3px;justify-content:center;margin:2px 0}
+.mdice span{width:16px;height:16px;border-radius:4px;background:#f3eee0;color:#b3201a;font-size:11px;font-weight:800;display:grid;place-items:center;line-height:1}
+.spot.prop.red .nm{color:#ff9f95}
+
+/* chips */
+.chip{min-width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;padding:0 4px;
+  border:3px dashed rgba(255,255,255,.75);box-shadow:0 2px 5px rgba(0,0,0,.5);text-shadow:0 1px 1px rgba(0,0,0,.5);background:#777}
+.chip.sm{min-width:28px;height:28px;font-size:10px;border-width:2px}
+.c1{background:#e8e3d6;color:#222;text-shadow:none;border-color:#999}
+.c5{background:#c8312a} .c25{background:#1f8a4c} .c100{background:#1d1d1d} .c500{background:#6b2fa6} .c1000{background:#d98c1a}
+
+/* ---------- side ---------- */
+.side{display:flex;flex-direction:column;gap:12px}
+.panel{background:var(--panel);border:1px solid var(--edge);border-radius:16px;padding:12px 14px}
+.panel h3{margin:0 0 8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.plist{display:flex;flex-direction:column;gap:6px}
+.pl{display:grid;grid-template-columns:22px 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04)}
+.pl.rm{grid-template-columns:22px 1fr auto auto}
+.pl.me{outline:1px solid var(--gold-deep)}
+.pl.sh{background:rgba(243,207,78,.12)}
+.pl .ic{font-size:15px;text-align:center}
+.pl .nmz{font-weight:600;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl .nmz small{color:var(--muted);font-weight:500;margin-left:5px;font-size:11px}
+.pl .mon{text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
+.pl .mon small{display:block;font-size:11px}
+.pos{color:var(--win)} .neg{color:var(--lose)}
+.x{color:var(--muted);font-size:16px;padding:0 0 0 6px}
+.x:hover{color:var(--lose)}
+.hostctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.hist{display:flex;gap:5px;flex-wrap:wrap}
+.hb{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:rgba(255,255,255,.1)}
+.hb.out{background:var(--red)} .hb.made,.hb.win{background:var(--gold);color:#1a1300} .hb.point{background:#fff;color:#111} .hb.craps{background:#6b2fa6}
+.hot{font-size:12px;color:var(--muted);margin-top:8px}
+.last{font-size:13px;display:flex;flex-direction:column;gap:3px}
+.last .li{display:flex;justify-content:space-between;gap:8px}
+.last .tot{border-top:1px solid var(--edge);margin-top:4px;padding-top:4px;font-weight:700}
+.feed{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px;max-height:120px;overflow:auto}
+details.pays summary{cursor:pointer;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;list-style:none}
+details.pays summary::-webkit-details-marker{display:none}
+details.pays summary::after{content:' +'}
+details.pays[open] summary::after{content:' -'}
+.ptab{width:100%;font-size:12px;border-collapse:collapse;margin-top:8px}
+.ptab td{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.ptab td:last-child{text-align:right;color:var(--gold);font-weight:600}
+.msgs{max-height:180px;overflow:auto;display:flex;flex-direction:column;gap:4px;font-size:13px;margin-bottom:8px}
+.msgs b{color:var(--gold)}
+
+/* ---------- rack ---------- */
+.rack{position:fixed;left:0;right:0;bottom:0;z-index:20;background:linear-gradient(transparent,rgba(2,18,10,.9) 18%);padding:16px 12px calc(10px + env(safe-area-inset-bottom))}
+.rin{max-width:1280px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:rgba(3,25,15,.92);border:1px solid var(--edge);border-radius:18px;padding:10px 12px;box-shadow:0 -6px 24px rgba(0,0,0,.4)}
+.bank{min-width:96px}
+.bank .v{font-family:'Bebas Neue';font-size:26px;line-height:1;color:var(--gold);letter-spacing:.04em}
+.bank .lbl{font-size:9px}
+.chips{display:flex;gap:6px}
+.chips .chip{cursor:pointer;min-width:42px;height:42px;font-size:12px;transition:transform .12s}
+.chips .chip.sel{transform:translateY(-6px) scale(1.06);box-shadow:0 0 0 3px var(--gold),0 6px 12px rgba(0,0,0,.5)}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+.tools .btn.on{background:var(--red);border-color:#ff8a80}
+.rollz{margin-left:auto;display:flex;gap:8px;align-items:center}
+.rollbtn{font-family:'Bebas Neue';font-size:24px;letter-spacing:.08em;padding:10px 26px}
+.rollbtn.pulse{animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(243,207,78,.6)}50%{box-shadow:0 0 0 10px rgba(243,207,78,0)}}
+.status{font-size:13px;color:var(--muted);max-width:220px}
+@media (max-width:640px){
+  .rin{gap:8px;padding:8px}
+  .chips .chip{min-width:36px;height:36px;font-size:11px}
+  .rollz{margin-left:0;width:100%;flex-wrap:wrap;gap:6px}
+  .rollz .status{flex-basis:100%;max-width:none;font-size:12px}
+  .rollz .rollbtn{flex:1;font-size:21px;padding:9px 14px}
+  .stage{grid-template-columns:auto 1fr;}
+  .pointbox{grid-column:2;grid-row:1;justify-self:end}
+  .callwrap{grid-column:1/-1}
+  .die{width:46px;height:46px;padding:7px}
+  .die i{width:8px;height:8px}
+}
+.toast{position:fixed;left:50%;bottom:120px;transform:translateX(-50%);background:#111;border:1px solid var(--gold-deep);color:var(--cream);padding:10px 16px;border-radius:12px;z-index:40;font-size:14px;max-width:90vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+</style>
+</head>
+<body>
+
+<!-- ---------- welcome ---------- -->
+<section id="welcome">
+  <div class="wbox">
+    <div class="dz">🎲🎲</div>
+    <h1 class="display">CRA<span>PS</span></h1>
+    <p class="tag">Live dice with your friends. Up to 8 at the rail.</p>
+    <div id="inviteNote" class="invite hidden"></div>
+    <div class="wcard">
+      <label class="fl" for="nameIn">Your name</label>
+      <input id="nameIn" class="inp" maxlength="18" autocomplete="nickname" placeholder="Name at the table">
+    </div>
+    <div class="wcard" id="hostCard">
+      <h2 class="display">Open a table</h2>
+      <label class="fl">Starting chips</label>
+      <div class="seg" id="bankSeg">
+        <button data-v="500">$500</button><button data-v="1000" class="on">$1,000</button><button data-v="5000">$5,000</button>
+      </div>
+      <button id="hostBtn" class="btn gold wide">Open a table</button>
+    </div>
+    <div class="wcard">
+      <h2 class="display">Join a table</h2>
+      <div class="row">
+        <input id="codeIn" class="inp" maxlength="6" placeholder="Table code" autocapitalize="characters" style="text-transform:uppercase">
+        <button id="joinBtn" class="btn">Join</button>
+      </div>
+    </div>
+    <div id="wErr" class="err"></div>
+    <a class="back" href="../">← Back to Game Night</a>
+  </div>
+</section>
+
+<!-- ---------- game ---------- -->
+<div id="game" class="hidden">
+  <div class="top">
+    <a class="back" href="../">← Game Night</a>
+    <div class="brand display">CRA<span>PS</span></div>
+    <div class="code">Table <b id="codeOut">-----</b><button id="inviteBtn" class="btn sm gold">Invite</button></div>
+    <span class="dot" id="netDot" title="Connection"></span>
+  </div>
+  <div id="banner" class="banner hidden"></div>
+
+  <div class="main">
+    <section class="felt">
+      <div class="stage">
+        <div class="dice" id="dice"><div class="die" id="die1"></div><div class="die" id="die2"></div></div>
+        <div class="callwrap"><div class="call display" id="call">Coming out</div><div class="sub" id="sub"></div></div>
+        <div class="pointbox"><div class="puck" id="bigPuck">OFF</div><div class="lbl">Point</div></div>
+      </div>
+
+      <div class="layout">
+        <div class="mainbets">
+          <div class="nums" id="nums"></div>
+          <div class="row2">
+            <div class="spot come" data-bet="come"><div class="nm">Come</div><div class="hint">Like a new Pass Line, once the point is on</div><div class="mine"></div><div class="oth"></div></div>
+            <div class="spot dc" data-bet="dc"><div class="nm">Don't Come</div><div class="hint">Bar 12</div><div class="mine"></div><div class="oth"></div></div>
+          </div>
+          <div class="spot field" data-bet="field">
+            <div class="nm">Field</div>
+            <div class="fnums"><b>2</b> · 3 · 4 · 9 · 10 · 11 · <b>12</b></div>
+            <div class="hint">One roll. 2 pays double, 12 pays triple</div>
+            <div class="mine"></div><div class="oth"></div>
+          </div>
+          <div class="spot dp" data-bet="dp">
+            <div class="nm">Don't Pass Bar</div><div class="hint">Wins on 2 or 3 now, then on a 7 before the point. 12 pushes.</div>
+            <button class="oddsbtn ob hidden" data-bet="dpOdds"></button>
+            <div class="mine"></div><div class="oth"></div>
+          </div>
+          <div class="spot pass" data-bet="pass">
+            <div class="nm">Pass Line</div><div class="hint">Wins on 7 or 11 now, then on the point before a 7</div>
+            <button class="oddsbtn ob hidden" data-bet="passOdds"></button>
+            <div class="mine"></div><div class="oth"></div>
+          </div>
+        </div>
+        <div class="props" id="props"><h3>One roll &amp; hardways</h3></div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="panel" id="lastPanel"><h3>Your last roll</h3><div class="last" id="lastOut"><span style="color:var(--muted);font-size:13px">Tap a chip, then tap the layout to bet. Winning bets stay up until you take them down.</span></div></div>
+      <div class="panel">
+        <h3>At the rail <span id="seatCount"></span></h3>
+        <div class="plist" id="plist"></div>
+        <div class="hostctl hidden" id="hostCtl">
+          <button class="btn sm" id="botBtn">+ Computer player</button>
+          <button class="btn sm" id="rollForBtn">Roll for shooter</button>
+          <button class="btn sm ghost" id="skipBtn">Skip shooter</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Rolls</h3>
+        <div class="hist" id="hist"></div>
+        <div class="hot" id="hot"></div>
+      </div>
+      <div class="panel">
+        <h3>Table</h3>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="panel">
+        <h3>Chat</h3>
+        <div class="msgs" id="msgs"></div>
+        <form id="chatForm" class="row"><input id="chatIn" class="inp" maxlength="200" placeholder="Say something" autocomplete="off" style="padding:9px 12px;font-size:14px"><button class="btn sm">Send</button></form>
+      </div>
+      <div class="panel">
+        <details class="pays"><summary>Payouts &amp; rules</summary>
+          <table class="ptab">
+            <tr><td>Pass / Don't Pass / Come / Don't Come</td><td>1 to 1</td></tr>
+            <tr><td>Odds on 4 or 10 (max 3x)</td><td>2 to 1</td></tr>
+            <tr><td>Odds on 5 or 9 (max 4x)</td><td>3 to 2</td></tr>
+            <tr><td>Odds on 6 or 8 (max 5x)</td><td>6 to 5</td></tr>
+            <tr><td>Lay odds (max 6x the flat)</td><td>1:2 · 2:3 · 5:6</td></tr>
+            <tr><td>Place 4 or 10</td><td>9 to 5</td></tr>
+            <tr><td>Place 5 or 9</td><td>7 to 5</td></tr>
+            <tr><td>Place 6 or 8</td><td>7 to 6</td></tr>
+            <tr><td>Field 3, 4, 9, 10, 11</td><td>1 to 1</td></tr>
+            <tr><td>Field 2 / 12</td><td>2 to 1 / 3 to 1</td></tr>
+            <tr><td>Hard 4 or 10</td><td>7 to 1</td></tr>
+            <tr><td>Hard 6 or 8</td><td>9 to 1</td></tr>
+            <tr><td>Any 7</td><td>4 to 1</td></tr>
+            <tr><td>Any Craps</td><td>7 to 1</td></tr>
+            <tr><td>Yo 11 / Ace-Deuce</td><td>15 to 1</td></tr>
+            <tr><td>Aces / Twelve</td><td>30 to 1</td></tr>
+          </table>
+          <p style="font-size:12px;color:var(--muted);line-height:1.5;margin:10px 0 0">$5 minimum on line, come, field and place bets. $1 on hardways, props and odds. $1,000 max per bet. Place bets and hardways are off on the come-out. Come odds are off on the come-out (returned). Right-click or use Take down to pull a bet.</p>
+        </details>
+      </div>
+    </aside>
+  </div>
+
+  <div class="rack">
+    <div class="rin">
+      <div class="bank"><div class="v" id="bankOut">$0</div><div class="lbl" id="bankSub">Chips</div></div>
+      <div class="chips" id="chips"></div>
+      <div class="tools">
+        <button class="btn sm" id="takeBtn" title="Tap bets to take them down">Take down</button>
+        <button class="btn sm ghost" id="clearBtn">Clear bets</button>
+        <button class="btn sm red hidden" id="rebuyBtn">Rebuy</button>
+      </div>
+      <div class="rollz">
+        <span class="status" id="status"></span>
+        <button class="btn sm ghost hidden" id="passBtn">Pass dice</button>
+        <button class="btn gold rollbtn hidden" id="rollBtn">Roll</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
