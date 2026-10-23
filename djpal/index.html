@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c0a12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>DJPal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0a12; --panel:#16131f; --panel2:#1f1a2b; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.14);
+    --ink:#f5f1e8; --muted:#9d97ab; --amber:#ffb84d; --pink:#ff5c8a; --green:#4ade80; --red:#f87171; --blue:#7dd3fc;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{font-family:Inter,system-ui,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(255,92,138,.16),transparent 70%),radial-gradient(ellipse 60% 40% at 100% 0%,rgba(255,184,77,.10),transparent 70%);background-attachment:fixed}
+  button,input{font:inherit;color:inherit}
+  button{cursor:pointer;border:0;background:none}
+  .hide{display:none!important}
+  .wrap{max-width:1180px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px 48px}
+  h1,h2,.disp{font-family:Unbounded,Inter,sans-serif}
+  .muted{color:var(--muted)}
+  .row{display:flex;align-items:center;gap:10px}
+  .grow{flex:1;min-width:0}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:12px;font-weight:600;font-size:15px;background:var(--panel2);border:1px solid var(--line2);transition:transform .1s,background .15s}
+  .btn:active{transform:scale(.97)}
+  a.btn{text-decoration:none;color:var(--ink)}
+  .btn.hot{background:linear-gradient(135deg,var(--pink),#ff7a59);border-color:transparent;color:#fff}
+  .btn.amber{background:var(--amber);color:#1a1206;border-color:transparent}
+  .btn.ghost{background:transparent}
+  .btn.sm{height:34px;padding:0 12px;font-size:13px;border-radius:10px}
+  .btn.icon{width:38px;padding:0;height:38px;border-radius:10px}
+  .btn[disabled]{opacity:.45;pointer-events:none}
+  input.field{width:100%;height:48px;padding:0 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line2);font-size:16px;outline:none}
+  input.field:focus{border-color:var(--pink)}
+
+  /* landing */
+  .hero{min-height:calc(100vh - 64px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}
+  .logo{font-family:Unbounded;font-weight:800;font-size:clamp(46px,12vw,84px);letter-spacing:-.02em;line-height:1}
+  .logo b{background:linear-gradient(135deg,var(--pink),var(--amber));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .tagline{color:var(--muted);max-width:420px;line-height:1.5;margin-bottom:22px}
+  .entry{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px}
+  .or{color:var(--muted);font-size:13px;margin:10px 0 2px;letter-spacing:.12em;text-transform:uppercase}
+  .disc{width:86px;height:86px;border-radius:50%;margin-bottom:16px;background:repeating-radial-gradient(circle,#1b1726 0 2px,#120f1a 2px 4px);border:1px solid var(--line2);position:relative;animation:spin 6s linear infinite}
+  .disc::after{content:"";position:absolute;inset:30px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--amber))}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* top bar */
+  .bar{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+  .bar h1{font-size:20px;font-weight:800;line-height:1.1}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:var(--panel);border:1px solid var(--line);font-size:13px;color:var(--muted)}
+  .pill b{color:var(--ink);font-weight:700;letter-spacing:.08em}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(74,222,128,.18)}
+  .dot.off{background:var(--red);box-shadow:0 0 0 3px rgba(248,113,113,.18)}
+
+  /* cards */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px}
+  .label{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .label .n{color:var(--ink);background:var(--panel2);border-radius:99px;padding:1px 8px;letter-spacing:0}
+  .art{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--panel2);flex:none}
+  .art.lg{width:72px;height:72px;border-radius:12px}
+  .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .a{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--panel2);color:var(--muted);white-space:nowrap}
+  .tag.e{background:#3a2430;color:#ffb3c7}
+  .tag.k{color:var(--blue)}
+  .tag.b{color:var(--amber)}
+  .tag.ok{background:rgba(74,222,128,.12);color:var(--green)}
+  .tag.meh{background:rgba(255,184,77,.12);color:var(--amber)}
+  .tag.bad{background:rgba(248,113,113,.12);color:var(--red)}
+  .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+
+  .now{display:flex;gap:14px;align-items:center}
+  .eq{display:inline-flex;gap:2px;align-items:flex-end;height:12px}
+  .eq i{width:3px;background:var(--pink);border-radius:1px;animation:eq 1s ease-in-out infinite}
+  .eq i:nth-child(2){animation-delay:-.3s}.eq i:nth-child(3){animation-delay:-.6s}
+  @keyframes eq{0%,100%{height:3px}50%{height:12px}}
+
+  .list{display:flex;flex-direction:column}
+  .item{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .item:first-child{border-top:0}
+  .rank{width:20px;text-align:center;color:var(--muted);font-weight:700;font-size:13px;flex:none}
+  .vote{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:52px;height:52px;border-radius:12px;background:var(--panel2);border:1px solid var(--line2);flex:none;font-weight:700;font-size:15px;line-height:1.05}
+  .vote small{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.05em}
+  .vote.on{background:rgba(255,92,138,.16);border-color:var(--pink);color:var(--pink)}
+  .vote.on small{color:var(--pink)}
+  .mine{font-size:11px;color:var(--amber);font-weight:600}
+
+  /* guest */
+  .gwrap{max-width:620px;margin:0 auto}
+  .search{position:sticky;top:0;z-index:5;padding:10px 0;background:linear-gradient(var(--bg) 75%,transparent)}
+  .stack>*+*{margin-top:14px}
+  .empty{color:var(--muted);text-align:center;padding:22px 8px;font-size:14px;line-height:1.5}
+  .left{font-size:13px;color:var(--muted);margin-top:8px}
+
+  /* host */
+  .hgrid{display:grid;gap:16px;grid-template-columns:1fr}
+  @media(min-width:900px){.hgrid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+  .upnext{border-color:rgba(255,184,77,.45);background:linear-gradient(160deg,rgba(255,184,77,.08),var(--panel) 60%)}
+  .why{font-size:12px;color:var(--amber);margin-top:6px}
+  .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .hitem .acts{margin-top:8px}
+  .qrbox{display:flex;gap:16px;align-items:center}
+  .qr{background:#fff;border-radius:12px;padding:8px;flex:none;line-height:0}
+  .qr svg{width:128px;height:128px;display:block}
+  .code{font-family:Unbounded;font-weight:800;font-size:28px;letter-spacing:.12em}
+  .set{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+  .set:first-of-type{border-top:0}
+  .tog{width:46px;height:28px;border-radius:99px;background:var(--panel2);border:1px solid var(--line2);position:relative;flex:none}
+  .tog::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:.15s}
+  .tog.on{background:var(--pink);border-color:var(--pink)}
+  .tog.on::after{left:21px;background:#fff}
+  .step{display:flex;align-items:center;gap:6px}
+  .step b{min-width:18px;text-align:center}
+  .tip{font-size:13px;color:var(--muted);line-height:1.5}
+  .tip b{color:var(--ink)}
+
+  /* party screen */
+  .tv{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;grid-template-columns:1fr;place-items:center;padding:24px;overflow:auto;
+    background-image:radial-gradient(ellipse 70% 60% at 20% 20%,rgba(255,92,138,.2),transparent 70%),radial-gradient(ellipse 60% 60% at 90% 90%,rgba(255,184,77,.14),transparent 70%)}
+  .tvin{display:grid;gap:40px;align-items:center;max-width:1200px;width:100%;grid-template-columns:1fr}
+  @media(min-width:860px){.tvin{grid-template-columns:auto 1fr}}
+  .tv .qr{padding:16px;border-radius:24px}
+  .tv .qr svg{width:min(62vw,340px);height:min(62vw,340px)}
+  .tv h2{font-size:clamp(28px,4.5vw,52px);font-weight:800;line-height:1.05;margin-bottom:10px}
+  .tv .big{font-size:clamp(18px,2.2vw,24px)}
+  .tv .item .t{font-size:18px}
+  .tvclose{position:fixed;top:max(14px,env(safe-area-inset-top));right:14px;z-index:51}
+
+  .toast{position:fixed;left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);opacity:0;background:#2a2438;border:1px solid var(--line2);padding:12px 16px;border-radius:12px;font-size:14px;max-width:min(92vw,440px);transition:.2s;z-index:60;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .banner{background:rgba(255,184,77,.1);border:1px solid rgba(255,184,77,.35);color:#ffe2b0;padding:10px 14px;border-radius:12px;font-size:14px;margin-bottom:14px;line-height:1.45}
+  .spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--line2);border-top-color:var(--pink);animation:spin .8s linear infinite;display:inline-block}
+  a{color:var(--amber)}
+</style>
+</head>
+<body>
+
+<!-- landing -->
+<section id="landing" class="wrap hide">
+  <div class="hero">
+    <div class="disc"></div>
+    <div class="logo">DJ<b>Pal</b></div>
+    <p class="tagline">Guests scan a code and request songs from their phone. The crowd votes. You see what's next, and whether it mixes.</p>
+    <div class="entry">
+      <input id="partyName" class="field" maxlength="40" placeholder="Party name, like Diwali at Abhyuday's">
+      <button id="startBtn" class="btn hot">Start a party</button>
+      <div class="or">or join one</div>
+      <div class="row"><input id="joinCode" class="field" maxlength="4" placeholder="Code" style="text-transform:uppercase;letter-spacing:.2em;text-align:center"><button id="joinBtn" class="btn">Join</button></div>
+      <p id="landErr" class="muted" style="font-size:14px;min-height:20px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- guest name -->
+<section id="hello" class="wrap hide">
+  <div class="hero">
+    <div class="disc"></div>
+    <h1 id="helloTitle" style="font-size:26px">You're in</h1>
+    <p class="tagline">Pop your name in so the DJ knows who to blame for the request.</p>
+    <div class="entry">
+      <input id="guestName" class="field" maxlength="24" placeholder="Your name" autocomplete="given-name">
+      <button id="helloBtn" class="btn hot">Let's go</button>
+      <p id="helloErr" class="muted" style="font-size:14px;min-height:20px"></p>
+    </div>
+  </div>
+</section>
+
+<!-- guest -->
+<section id="guest" class="wrap hide">
+  <div class="gwrap">
+    <div class="bar">
+      <div class="grow"><h1 id="gParty">Party</h1><div class="a" id="gSub">Request a song, vote for the ones you want</div></div>
+      <span class="dot" id="gDot"></span>
+    </div>
+    <div id="gBanner"></div>
+    <div class="card" id="gNow"></div>
+    <div class="search"><input id="gSearch" class="field" placeholder="Search a song or artist" autocomplete="off" enterkeyhint="search"></div>
+    <div id="gResults" class="card hide"></div>
+    <div class="card" style="margin-top:14px">
+      <div class="label">The queue <span class="n" id="gCount">0</span></div>
+      <div id="gQueue" class="list"></div>
+      <div class="left" id="gLeft"></div>
+    </div>
+  </div>
+</section>
+
+<!-- host -->
+<section id="host" class="wrap hide">
+  <div class="bar">
+    <div class="grow"><h1 id="hParty">Party</h1><div class="a"><span id="hGuests">0 guests</span></div></div>
+    <span class="pill"><span class="dot" id="hDot"></span>Code <b id="hCode">----</b></span>
+    <button class="btn sm amber" id="tvBtn">Party screen</button>
+  </div>
+  <div id="hBanner"></div>
+  <div class="hgrid">
+    <div class="stack">
+      <div class="card" id="hNow"></div>
+      <div class="card upnext" id="hNext"></div>
+      <div class="card">
+        <div class="label">Queue <span class="n" id="hCount">0</span></div>
+        <div id="hQueue" class="list"></div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <div class="label">Guests scan this</div>
+        <div class="qrbox"><div class="qr" id="hQr"></div><div><div class="code" id="hCode2">----</div><p class="tip" style="margin-top:6px">Or go to <b id="hUrl"></b> and type the code.</p><button class="btn sm" id="copyLink" style="margin-top:10px">Copy invite link</button></div></div>
+      </div>
+      <div class="card">
+        <div class="label">Add a song yourself</div>
+        <input id="hSearch" class="field" placeholder="Search Apple Music catalog" autocomplete="off">
+        <div id="hResults" class="list" style="margin-top:6px"></div>
+      </div>
+      <div class="card">
+        <div class="label">House rules</div>
+        <div class="set"><span>Taking requests</span><button class="tog" data-set="open"></button></div>
+        <div class="set"><span>Allow explicit</span><button class="tog" data-set="explicit"></button></div>
+        <div class="set"><span>Mix-aware next pick<br><small class="muted">Breaks near-ties by what mixes best</small></span><button class="tog" data-set="mixAware"></button></div>
+        <div class="set"><span>Songs per guest at a time</span><span class="step"><button class="btn icon sm" data-step="-1">−</button><b id="maxPer">3</b><button class="btn icon sm" data-step="1">+</button></span></div>
+      </div>
+      <div class="card">
+        <div class="label">Played tonight <span class="n" id="hPlayedN">0</span></div>
+        <div id="hPlayed" class="list"></div>
+      </div>
+      <div class="card tip">
+        <b>With djay:</b> tap <b>Copy</b> on a song, then paste into djay's search with Apple Music as the source. Keep this page open in Split View or on a second device; if the browser goes to the background, guests lose the connection until you come back.
+        <div class="row" style="margin-top:12px"><button class="btn sm ghost" id="endBtn" style="color:var(--red)">End party</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- party screen -->
+<section id="tv" class="tv hide">
+  <button class="btn sm tvclose" id="tvClose">Close</button>
+  <div class="tvin">
+    <div style="text-align:center"><div class="qr" id="tvQr" style="display:inline-block"></div><div class="code" style="margin-top:14px" id="tvCode">----</div></div>
+    <div>
+      <h2>Scan to request a song</h2>
+      <p class="big muted" style="margin-bottom:26px">Search, request, then vote up what you want to hear.</p>
+      <div id="tvNow" style="margin-bottom:20px"></div>
+      <div class="label">Up next</div>
+      <div id="tvQueue" class="list"></div>
+    </div>
+  </div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="queue.js"></script>
+<script src="analyze.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
